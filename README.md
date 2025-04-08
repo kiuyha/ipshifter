@@ -13,7 +13,15 @@ IPShifter is a tool that can change ip address in specific interval using TOR. T
 
 ## Installation
 
+1. Apt
+```bash
+curl -fsSL https://kiuyha.github.io/ipshifter-apt/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/ipshifter.gpg > /dev/null
 
+echo "deb [signed-by=/usr/share/keyrings/ipshifter.gpg] https://kiuyha.github.io/ipshifter-apt stable main" | sudo tee /etc/apt/sources.list.d/ipshifter.list
+
+sudo apt update
+sudo apt install ipshifter
+```
 
 ## Usage
 

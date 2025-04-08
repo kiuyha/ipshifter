@@ -1,0 +1,83 @@
+name: Build & Publish DEB Package
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+
+    - name: Build project
+      run: cargo build --release
+
+    - name: Prepare DEB structure
+      run: |
+        mkdir -p pkg/usr/bin
+        cp target/release/ipshifter pkg/usr/bin/
+
+        mkdir -p pkg/DEBIAN
+        cat <<EOF > pkg/DEBIAN/control
+        Version: ${GITHUB_REF_NAME#v}-1
+        Section: utils
+        Priority: medium
+        Package: ipshifter
+        Architecture: amd64
+        Maintainer: Kiuyha <ketutshridhara@email.com>
+        Depends: tor (>=0.4), curl(>=8.5.0)
+        Description: A simple IP shifter tool written in Rust
+        EOF
+
+    - name: Build .deb
+      run: dpkg-deb --build pkg ipshifter_${GITHUB_REF_NAME#v}-1_amd64.deb
+
+    - name: Set up GPG key
+      run: |
+        echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg.conf
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+      env:
+        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+    - name: Clean repo directory
+      run: rm -rf repo || true
+
+    - name: Create APT repo structure
+      run: |
+        mkdir -p repo/stable/main/binary-amd64
+        mv ipshifter_*.deb repo/stable/main/binary-amd64/
+        cd repo/stable/main/binary-amd64
+        dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
+
+    - name: Generate Release file
+      run: |
+        cd repo/stable
+        apt-ftparchive release . > Release
+        gpg --batch --yes --passphrase "$GPG_PASSPHRASE" -abs -o Release.gpg Release
+      env:
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+    - name: add public key
+      run: |
+        gpg --export -a "Your Name or Email" > repo/public.key
+
+    - name: Deploy to gh-pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GH_PAT }}
+        external_repository: kiuyha/ipshifter-apt
+        publish_dir: ./repo
+        publish_branch: gh-pages
+        force_orphan: true
