@@ -18,7 +18,7 @@ use nix::unistd::Uid;
 #[derive(Parser, Debug)]
 #[command(name = "ipshifter")]
 #[command(author = "Kiuyha")]
-#[command(version = "0.1.0")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "A simple IP shifter tool that can change ip address in specific interval using TOR.")]
 
 struct Args {
