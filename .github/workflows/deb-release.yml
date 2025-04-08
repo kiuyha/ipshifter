@@ -74,7 +74,7 @@ jobs:
 
     - name: add public key
       run: |
-        gpg --export -a "Your Name or Email" > repo/public.key
+        gpg --export -a "Kiuyha <ketutshridhara@gmail.com>" > repo/public.key
 
     - name: Deploy to gh-pages
       uses: peaceiris/actions-gh-pages@v4
