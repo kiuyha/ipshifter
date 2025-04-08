@@ -59,10 +59,12 @@ jobs:
 
     - name: Create APT repo structure
       run: |
+        mkdir -p repo/pool
         mkdir -p repo/dists/stable/main/binary-amd64
-        mv ipshifter_*.deb repo/dists/stable/main/binary-amd64/
-        cd repo/dists/stable/main/binary-amd64
-        dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
+        mv ipshifter_*.deb repo/pool
+        cd repo
+        dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
+        gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
 
     - name: Generate Release file
       run: |
