@@ -321,7 +321,7 @@ fn main() {
             .expect("Failed to execute command");
         std::process::exit(0);
     }
-    
+
     // handling arguments
     if args.detached {
         println!(" {} Running in detached mode.",
@@ -339,8 +339,6 @@ fn main() {
 
     // checking if user run it in root or sudo
     if !Uid::effective().is_root() {
-        println!("Not running as root, re-running with sudo...");
-
         let args: Vec<String> = std::env::args().collect();
 
         // re run with sudo
