@@ -35,7 +35,7 @@ jobs:
         Priority: medium
         Package: ipshifter
         Architecture: amd64
-        Maintainer: Kiuyha <ketutshridhara@email.com>
+        Maintainer: Kiuyha <ketutshridhara@gmail.com>
         Depends: tor (>=0.4), curl(>=8.5.0)
         Description: A simple IP shifter tool written in Rust
         EOF
