@@ -68,8 +68,9 @@ jobs:
 
     - name: Generate Release file
       run: |
-        cd repo/dists/stable/main/binary-amd64
+        cd repo/dists/stable
         apt-ftparchive release . > Release
+        gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --pinentry-mode loopback --clearsign -o InRelease Release
         gpg --batch --yes --passphrase "$GPG_PASSPHRASE" -abs -o Release.gpg Release
       env:
         GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
