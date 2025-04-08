@@ -59,16 +59,16 @@ jobs:
 
     - name: Create APT repo structure
       run: |
-        mkdir -p repo/pool
+        mkdir -p repo/pool/main/i/ipshifter
         mkdir -p repo/dists/stable/main/binary-amd64
-        mv ipshifter_*.deb repo/pool
+        mv ipshifter_*.deb repo/pool/main/i/ipshifter
         cd repo
         dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
         gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
 
     - name: Generate Release file
       run: |
-        cd repo/dists/stable
+        cd repo/dists/stable/main/binary-amd64
         apt-ftparchive release . > Release
         gpg --batch --yes --passphrase "$GPG_PASSPHRASE" -abs -o Release.gpg Release
       env:
