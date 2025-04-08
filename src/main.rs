@@ -312,6 +312,31 @@ fn change_ip_repeatedly(interval: u32, count: u32){
 }
 
 fn main() {
+    let args = Args::parse();
+    // handling stop argument
+    if args.stop{
+        Command::new("pkill")
+            .args(["-f","ipshifter"])
+            .output()
+            .expect("Failed to execute command");
+        std::process::exit(0);
+    }
+    
+    // handling arguments
+    if args.detached {
+        println!(" {} Running in detached mode.",
+            sign_with_warning(false),
+        );
+        // run new process while make the output null
+        Command::new("sudo")
+            .arg("ipshifter")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        std::process::exit(0);
+    }
+
     // checking if user run it in root or sudo
     if !Uid::effective().is_root() {
         println!("Not running as root, re-running with sudo...");
@@ -329,30 +354,6 @@ fn main() {
 
     // handling termination signals
     let mut signals = Signals::new(&[SIGHUP, SIGINT, SIGTERM, SIGQUIT]).unwrap();
-    let args = Args::parse();
-
-    // handling arguments
-    if args.detached {
-        println!(" {} Running in detached mode.",
-            sign_with_warning(false),
-        );
-        // run new process while make the output null
-        Command::new("sudo")
-            .arg("ipshifter")
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap();
-        std::process::exit(0);
-    }
-
-    // handling stop argument
-    if args.stop{
-        Command::new("pkill")
-            .args(["-f","ipshifter"])
-            .output()
-            .expect("Failed to execute command");
-    }
 
     // handling signals in a separate thread
     thread::spawn(move || {
