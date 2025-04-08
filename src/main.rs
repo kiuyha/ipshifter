@@ -338,7 +338,7 @@ fn main() {
         );
         // run new process while make the output null
         Command::new("sudo")
-            .arg("/home/kiuyha/Documents/CLI program/ipshifter/target/release/ipshifter")
+            .arg("ipshifter")
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
@@ -349,7 +349,7 @@ fn main() {
     // handling stop argument
     if args.stop{
         Command::new("pkill")
-            .args(["-f","target/release/ipshifter"])
+            .args(["-f","ipshifter"])
             .output()
             .expect("Failed to execute command");
     }
