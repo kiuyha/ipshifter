@@ -315,25 +315,10 @@ fn main() {
     let args = Args::parse();
     // handling stop argument
     if args.stop{
-        Command::new("pkill")
-            .args(["-f","ipshifter"])
-            .output()
-            .expect("Failed to execute command");
-        std::process::exit(0);
-    }
-
-    // handling arguments
-    if args.detached {
-        println!(" {} Running in detached mode.",
-            sign_with_warning(false),
-        );
-        // run new process while make the output null
         Command::new("sudo")
-            .arg("ipshifter")
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap();
+            .args([ "pkill", "-f","ipshifter"])
+            .output()
+            .expect("failed to stop ipshifter");
         std::process::exit(0);
     }
 
@@ -348,6 +333,21 @@ fn main() {
             .expect("failed to re-execute with sudo");
 
         std::process::exit(status.code().unwrap_or(1));
+    }
+
+    // handling detached mode
+    if args.detached {
+        println!(" {} Running in detached mode.",
+            sign_with_warning(false),
+        );
+        // run new process while make the output null
+        Command::new("sudo")
+            .args([ "ipshifter", "-i", &args.interval.to_string(), "-c", &args.count.to_string()])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        std::process::exit(0);
     }
 
     // handling termination signals
