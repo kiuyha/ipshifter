@@ -70,7 +70,7 @@ ipshifter --stop
     - Turn on `Network Proxy`.
     - Enter `127.0.0.1:9050` in `configuration ` .
     - Click `Save`.
-<!-- <img src="https://bytebreach.github.io/img/port.png" alt="GNOME Configuration Example" /> -->
+<img src="https://raw.githubusercontent.com/kiuyha/ipshifter/main/assets/gnome.png" alt="GNOME Configuration Example" />
 
 
 ## Thanks
