@@ -28,12 +28,13 @@ sudo apt install ipshifter
 IPShifter provides a command-line interface for easy use. Here are the available options:
 
 ```bash
-ipshifter --i <seconds> --c <number>
+ipshifter -i <seconds> -c <number>
 ```
 
 - `-i` or `--interval` (optional): Time in seconds between IP changes (default is 10 seconds).
 - `-c` or `--count` (optional): Number of times to change the IP (default is unlimited).
 - `-d` or `--detach` (optional): Run IPShifter in the background.
+- `-s` or `--stop` (optional): Run IPShifter in the background.
 - `--help`: Show the help message and exit.
 - `--version`: Show the version number and exit.
 
@@ -68,7 +69,7 @@ ipshifter -d
 Stop IPShifter running in the background:
 
 ```bash
-ipshifter --stop
+ipshifter -s
 ```
 
 ## Configuration
