@@ -334,11 +334,13 @@ fn change_system_proxy(proxy_host: &str, proxy_port: u16, is_set: bool) {
             sign_with_warning(true),
         );
     }
-    println!(" {} For using proxy with non gui applications, please set manually to socks5://{}:{}.",
-        sign_with_warning(false),
-        proxy_host,
-        proxy_port
-    );
+    if is_set{
+        println!(" {} For using proxy with non gui applications, please set manually to socks5://{}:{}.",
+            sign_with_warning(false),
+            proxy_host,
+            proxy_port
+        );
+    }
 }
 
 fn check_connection(){
