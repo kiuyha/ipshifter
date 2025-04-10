@@ -74,13 +74,7 @@ ipshifter -s
 
 ## Configuration
 
-1. **GNOME**. This for GNOME users and only applies to GUI Applications.:
-    - Go to `Settings` > `Network` > `Proxy`.
-    - Turn on `Network Proxy`.
-    - Enter `127.0.0.1:9050` in `configuration ` .
-    - Click `Save`.
-<img src="https://raw.githubusercontent.com/kiuyha/ipshifter/main/assets/gnome.png" alt="GNOME Configuration Example" />
-
+IpShifter already configure the proxy for you if you use GNOME based or KDE. If you use another desktop environment, you need to configure the proxy manually.
 
 ## Thanks
 

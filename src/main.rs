@@ -8,7 +8,7 @@
 use colored::*;
 use clap::Parser;
 use std::process::Command;
-use std::thread;
+use std::{env, thread};
 use std::time::Duration;
 use std::process::Stdio;
 use signal_hook::consts::signal::*;
@@ -16,7 +16,7 @@ use signal_hook::iterator::Signals;
 use nix::unistd::Uid;
 
 #[derive(Parser, Debug)]
-#[command(name = "ipshifter")]
+#[command(name = env!("CARGO_PKG_NAME"))]
 #[command(author = "Kiuyha")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "A simple IP shifter tool that can change ip address in specific interval using TOR.")]
@@ -225,13 +225,120 @@ fn program_stop(err:bool){
         .args(["systemctl", "stop", "tor"])
         .output()
         .expect("Failed to execute command");
+
     println!(" {} Program shutting down.",
         sign_with_warning(false),
     );
+
+    change_system_proxy("127.0.0.1", 9050, false);
+
     if err {
         std::process::exit(1);
     }
     std::process::exit(0);
+}
+
+fn detect_desktop_environment() -> Option<String> {
+    let output = Command::new("ps")
+        .args(&["-e"])
+        .output()
+        .ok()?;
+    
+    let processes = String::from_utf8_lossy(&output.stdout);
+    if processes.contains("gnome-shell") {
+        Some("GNOME".to_string())
+    } else if processes.contains("plasmashell") {
+        Some("KDE".to_string())
+    } else {
+        None
+    }
+}
+
+fn change_gnome_proxy(proxy_host: &str, proxy_port: u16, is_set: bool){
+    Command::new("gsettings")
+        .args(&[
+            "set",
+            "org.gnome.system.proxy",
+            "mode",
+            if is_set { "manual" } else { "none" },
+        ])
+        .status()
+        .expect("Failed to set proxy mode");
+
+    if is_set {
+        // Set to manual proxy mode
+        // Set socks5 proxy
+        Command::new("gsettings")
+            .args(&[
+                "set",
+                "org.gnome.system.proxy.socks",
+                "host",
+                proxy_host,
+            ])
+            .status()
+            .expect("Failed to set proxy host");
+    
+        Command::new("gsettings")
+            .args(&[
+                "set",
+                "org.gnome.system.proxy.socks",
+                "port",
+                &proxy_port.to_string(),
+            ])
+            .status()
+            .expect("Failed to set proxy port");
+    }
+}
+
+fn change_kde_proxy(proxy_host: &str, proxy_port: u16, is_set: bool) {
+    let proxy_url = format!("socks5://{}:{}", proxy_host, proxy_port);
+    Command::new("kwriteconfig5")
+        .args([
+            "--file", "kioslaverc",
+            "--group","Proxy Settings",
+            "--key", "ProxyType",
+            if is_set { "1" } else { "0" },
+        ])
+        .status()
+        .expect("Failed to change proxy");
+
+    if is_set{
+        Command::new("kwriteconfig5")
+            .args([
+                "--file", "kioslaverc",
+                "--group","Proxy Settings",
+                "--key", "socksProxy",
+                &proxy_url,
+            ])
+            .status()
+            .expect("Failed to set proxy");
+    }
+    Command::new("qdbus")
+        .args([
+            "org.kde.kded6",
+            "/kded",
+            "org.kde.kded6.reconfigure"
+        ])
+        .status()
+        .expect("Failed to reconfigure kde");
+}
+
+fn change_system_proxy(proxy_host: &str, proxy_port: u16, is_set: bool) {
+    let de = detect_desktop_environment().unwrap_or_default().to_lowercase();
+    if de.contains("gnome") {
+        change_gnome_proxy(proxy_host, proxy_port, is_set);
+    } else if de.contains("kde") {
+        change_kde_proxy(proxy_host, proxy_port, is_set);
+    } else{
+        println!(" {} Your desktop enviroment not supported, please set the proxy manually.",
+            sign_with_warning(true),
+        );
+    }
+    println!(" {} For using proxy with non gui applications, please set manually to socks5://{}:{}.",
+        sign_with_warning(false),
+        proxy_host,
+        proxy_port
+    );
 }
 
 fn check_connection(){
@@ -294,8 +401,7 @@ fn initialize(){
         }
     }
     start_tor();
-    println!(" {} For configuration please visit https://github.com/kiuyha/ipshifter#Configuration",
-        sign_with_warning(false),)
+    change_system_proxy("127.0.0.1", 9050, true);
 }
 
 fn change_ip_repeatedly(interval: u32, count: u32){
@@ -313,41 +419,36 @@ fn change_ip_repeatedly(interval: u32, count: u32){
 
 fn main() {
     let args = Args::parse();
+
     // handling stop argument
     if args.stop{
-        Command::new("sudo")
-            .args([ "pkill", "-f","ipshifter"])
+        Command::new("pkill")
+            .args(["-f","ipshifter"])
             .output()
             .expect("failed to stop ipshifter");
         std::process::exit(0);
     }
 
-    // checking if user run it in root or sudo
-    if !Uid::effective().is_root() {
-        let args: Vec<String> = std::env::args().collect();
-
-        // re run with sudo
-        let status = Command::new("sudo")
-            .args(&args)
-            .status()
-            .expect("failed to re-execute with sudo");
-
-        std::process::exit(status.code().unwrap_or(1));
-    }
-
     // handling detached mode
     if args.detached {
+        let exe = env::current_exe().expect("Failed to get current exe path");
         println!(" {} Running in detached mode.",
             sign_with_warning(false),
         );
         // run new process while make the output null
-        Command::new("sudo")
-            .args([ "ipshifter", "-i", &args.interval.to_string(), "-c", &args.count.to_string()])
+        Command::new(exe)
+            .args(["-i", &args.interval.to_string(), "-c", &args.count.to_string()])
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
             .unwrap();
         std::process::exit(0);
+    }
+
+    // checking if user run it in root or sudo
+    if Uid::effective().is_root() {
+        eprintln!("Please not run this program as root");
+        std::process::exit(1);
     }
 
     // handling termination signals
