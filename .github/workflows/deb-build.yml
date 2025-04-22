@@ -71,8 +71,8 @@ jobs:
       run: |
         mkdir -p debian/pool/main/i/ipshifter
         mkdir -p debian/dists/stable/main/binary-amd64
-        mv ipshifter_*.deb pool/main/i/ipshifter
-        cd ~
+        mv ipshifter_*.deb debian/pool/main/i/ipshifter
+        cd debian
         dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
         gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
       working-directory: repo
