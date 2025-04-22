@@ -9,9 +9,13 @@ jobs:
   setup-dir:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
     - name: Create repo dir
-      run: mkdir repo
+      run: |
+        mkdir -p repo
+        cp README.md repo/
     
     - name: Upload repo dir
       uses: actions/upload-artifact@v4
