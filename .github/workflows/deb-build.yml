@@ -48,6 +48,9 @@ jobs:
 
     - name: Build .deb
       run: dpkg-deb --build pkg ipshifter_${GITHUB_REF_NAME#v}-1_amd64.deb
+    
+    - name: Check build output
+      run: ls -l /home/runner/work/ipshifter/ipshifter/
 
     - name: Set up GPG key
       run: |
