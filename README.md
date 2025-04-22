@@ -15,9 +15,9 @@ IPShifter is a tool that can change ip address in specific interval using TOR. T
 
 1. Apt
 ```bash
-curl -fsSL https://kiuyha.my.id/ipshifter-apt/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/ipshifter.gpg > /dev/null
+curl -fsSL https://kiuyha.my.id/ipshifter/debian/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/ipshifter.gpg > /dev/null
 
-echo "deb [signed-by=/usr/share/keyrings/ipshifter.gpg] https://kiuyha.my.id/ipshifter-apt stable main" | sudo tee /etc/apt/sources.list.d/ipshifter.list
+echo "deb [signed-by=/usr/share/keyrings/ipshifter.gpg] https://kiuyha.my.id/ipshifter/debian stable main" | sudo tee /etc/apt/sources.list.d/ipshifter.list
 
 sudo apt update
 sudo apt install ipshifter
