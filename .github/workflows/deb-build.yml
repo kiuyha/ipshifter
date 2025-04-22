@@ -1,0 +1,92 @@
+name: Build DEB Package
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+      secrets:
+        GPG_PRIVATE_KEY:
+          required: true
+        GPG_PASSPHRASE:
+          required: true
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    
+    - name: Build project
+      run: cargo build --release
+
+    - name: Prepare DEB structure
+      run: |
+        mkdir -p pkg/usr/bin
+        cp target/release/ipshifter pkg/usr/bin/
+
+        mkdir -p pkg/DEBIAN
+        cat <<EOF > pkg/DEBIAN/control
+        Version: ${GITHUB_REF_NAME#v}-1
+        Section: utils
+        Priority: medium
+        Package: ipshifter
+        Architecture: amd64
+        Maintainer: Kiuyha <ketutshridhara@gmail.com>
+        Depends: tor (>=0.4), curl(>=8.5.0)
+        Description: A simple IP shifter tool written in Rust
+        EOF
+
+    - name: Build .deb
+      run: dpkg-deb --build pkg ipshifter_${GITHUB_REF_NAME#v}-1_amd64.deb
+
+    - name: Set up GPG key
+      run: |
+        echo "${GPG_PRIVATE_KEY}" | head -c 50
+        echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        mkdir -p ~/.gnupg
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        gpgconf --kill gpg-agent
+        gpgconf --launch gpg-agent
+      env:
+        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+    
+    - name: Download repo dir
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: repo
+
+    - name: Create APT structure
+      run: |
+        mkdir -p pool/main/i/ipshifter
+        mkdir -p dists/stable/main/binary-amd64
+        mv ipshifter_*.deb pool/main/i/ipshifter
+        cd ~
+        dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
+        gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
+      working-directory: repo/debian
+
+    - name: Generate Release file
+      run: |
+        apt-ftparchive release . > Release
+        gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --pinentry-mode loopback --clearsign -o InRelease Release
+        gpg --batch --yes --passphrase "$GPG_PASSPHRASE" -abs -o Release.gpg Release
+      env:
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      working-directory: repo/debian/dists/stable
+
+    - name: add public key
+      run: |
+        gpg --export -a "Kiuyha <ketutshridhara@gmail.com>" > public.key
+      working-directory: repo/debian

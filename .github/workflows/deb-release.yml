@@ -1,4 +1,4 @@
-name: Build & Publish DEB Package
+name: Build & Publish All Package
 
 on:
   push:
@@ -6,84 +6,39 @@ on:
       - "v*"
 
 jobs:
-  build:
+  setup-dir:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
 
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+    - name: Create repo dir
+      run: mkdir repo
     
-
-    - name: Build project
-      run: cargo build --release
-
-    - name: Prepare DEB structure
-      run: |
-        mkdir -p pkg/usr/bin
-        cp target/release/ipshifter pkg/usr/bin/
-
-        mkdir -p pkg/DEBIAN
-        cat <<EOF > pkg/DEBIAN/control
-        Version: ${GITHUB_REF_NAME#v}-1
-        Section: utils
-        Priority: medium
-        Package: ipshifter
-        Architecture: amd64
-        Maintainer: Kiuyha <ketutshridhara@gmail.com>
-        Depends: tor (>=0.4), curl(>=8.5.0)
-        Description: A simple IP shifter tool written in Rust
-        EOF
-
-    - name: Build .deb
-      run: dpkg-deb --build pkg ipshifter_${GITHUB_REF_NAME#v}-1_amd64.deb
-
-    - name: Set up GPG key
-      run: |
-        echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-        mkdir -p ~/.gnupg
-        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        gpgconf --kill gpg-agent
-        gpgconf --launch gpg-agent
-      env:
-        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-
-    - name: Clean repo directory
-      run: rm -rf repo || true
-
-    - name: Create APT repo structure
-      run: |
-        mkdir -p repo/pool/main/i/ipshifter
-        mkdir -p repo/dists/stable/main/binary-amd64
-        mv ipshifter_*.deb repo/pool/main/i/ipshifter
-        cd repo
-        dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
-        gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
-
-    - name: Generate Release file
-      run: |
-        cd repo/dists/stable
-        apt-ftparchive release . > Release
-        gpg --batch --yes --passphrase "$GPG_PASSPHRASE" --pinentry-mode loopback --clearsign -o InRelease Release
-        gpg --batch --yes --passphrase "$GPG_PASSPHRASE" -abs -o Release.gpg Release
-      env:
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-    - name: add public key
-      run: |
-        gpg --export -a "Kiuyha <ketutshridhara@gmail.com>" > repo/public.key
-
-    - name: Deploy to gh-pages
-      uses: peaceiris/actions-gh-pages@v4
+    - name: Upload repo dir
+      uses: actions/upload-artifact@v4
       with:
-        personal_token: ${{ secrets.GH_PAT }}
-        external_repository: kiuyha/ipshifter-apt
-        publish_dir: ./repo
-        publish_branch: gh-pages
-        force_orphan: true
+        name: artifact-repo
+        path: repo
+    
+  call-deb-build:
+    uses: ./.github/workflows/deb-build.yml
+    needs: setup-dir
+    with:
+      dir: artifact-repo
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: call-deb-build
+    steps:
+      - name: Download repo dir
+        uses: actions/download-artifact@v4
+        with:
+          name: artifact-repo
+          path: repo
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ env.dir }}
+          publish_branch: gh-pages
+          force_orphan: true
