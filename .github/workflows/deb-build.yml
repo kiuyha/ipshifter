@@ -48,9 +48,6 @@ jobs:
 
     - name: Build .deb
       run: dpkg-deb --build pkg ipshifter_${GITHUB_REF_NAME#v}-1_amd64.deb
-    
-    - name: Check build output
-      run: ls -l /home/runner/work/ipshifter/ipshifter/
 
     - name: Set up GPG key
       run: |
@@ -74,7 +71,7 @@ jobs:
       run: |
         mkdir -p debian/pool/main/i/ipshifter
         mkdir -p debian/dists/stable/main/binary-amd64
-        mv "${{ github.workspace }}/ipshifter_*.deb" debian/pool/main/i/ipshifter
+        mv "${{ github.workspace }}"/ipshifter_*.deb debian/pool/main/i/ipshifter
         cd debian
         dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
         gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
