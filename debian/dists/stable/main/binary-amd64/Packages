@@ -1,0 +1,14 @@
+Package: ipshifter
+Version: 1.1.0-1
+Architecture: amd64
+Maintainer: Kiuyha <ketutshridhara@gmail.com>
+Depends: tor (>=0.4), curl(>=8.5.0)
+Filename: pool/main/i/ipshifter/ipshifter_1.1.0-1_amd64.deb
+Size: 451074
+MD5sum: f61b33326ab5a512908fd7c869b78a1e
+SHA1: 5b191abc353984f1bcbbb104df0c08da5b5b2865
+SHA256: e6afc691353043b677102ff03eeab087407e0f352a42936fe671cc31ce8da539
+Section: utils
+Priority: medium
+Description: A simple IP shifter tool written in Rust
+
