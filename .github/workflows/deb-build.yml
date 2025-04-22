@@ -90,3 +90,9 @@ jobs:
       run: |
         gpg --export -a "Kiuyha <ketutshridhara@gmail.com>" > public.key
       working-directory: repo/debian
+    
+    - name: Upload repo dir
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifact-repo-deb
+        path: repo

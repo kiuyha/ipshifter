@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   setup-dir:
     runs-on: ubuntu-latest
@@ -40,13 +43,13 @@ jobs:
       - name: Download repo dir
         uses: actions/download-artifact@v4
         with:
-          name: artifact-repo
+          name: artifact-repo-deb
           path: repo
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ env.dir }}
+          publish_dir: repo
           publish_branch: gh-pages
           force_orphan: true
