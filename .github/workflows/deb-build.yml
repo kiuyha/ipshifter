@@ -69,13 +69,13 @@ jobs:
 
     - name: Create APT structure
       run: |
-        mkdir -p pool/main/i/ipshifter
-        mkdir -p dists/stable/main/binary-amd64
+        mkdir -p debian/pool/main/i/ipshifter
+        mkdir -p debian/dists/stable/main/binary-amd64
         mv ipshifter_*.deb pool/main/i/ipshifter
         cd ~
         dpkg-scanpackages pool /dev/null > dists/stable/main/binary-amd64/Packages
         gzip -c dists/stable/main/binary-amd64/Packages > dists/stable/main/binary-amd64/Packages.gz
-      working-directory: repo/debian
+      working-directory: repo
 
     - name: Generate Release file
       run: |
