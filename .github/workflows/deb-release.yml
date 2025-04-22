@@ -23,7 +23,11 @@ jobs:
     uses: ./.github/workflows/deb-build.yml
     needs: setup-dir
     with:
-      dir: artifact-repo
+      artifact-name: artifact-repo
+    secrets:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
   
   deploy:
     runs-on: ubuntu-latest
