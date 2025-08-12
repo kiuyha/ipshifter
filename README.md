@@ -76,6 +76,10 @@ ipshifter -s
 
 IpShifter already configure the proxy for you if you use GNOME based or KDE. If you use another desktop environment, you need to configure the proxy manually.
 
+## Licensing
+IPshifter is licensed under the MIT License. See the LICENSE file for details.
+This project is a reimplementation in Rust of the original Python project Tornet by ByteBreach. The original project is licensed under the MIT License. A copy of the original license is included as LICENSE-Tornet.
+
 ## Thanks
 
 Thank you for using IPShifter! We hope this tool helps you secure your network and maintain your privacy. If you have any feedback or suggestions, please feel free to reach out to us.
